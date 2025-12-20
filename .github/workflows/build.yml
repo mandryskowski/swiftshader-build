@@ -42,6 +42,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install ninja-build
 
+      - name: Install dependencies (MacOS)
+        if: matrix.target == 'MacOS'
+        run: |
+          brew install ninja
+
       - name: Build swiftshader
         run: ./${{ matrix.build_script }}
 
