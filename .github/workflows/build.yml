@@ -32,7 +32,7 @@ jobs:
 
     steps:
       - name: Checkout git repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           submodules: true
 
@@ -46,7 +46,7 @@ jobs:
         run: ./${{ matrix.build_script }}
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: swiftshader-${{ matrix.artifact }}
           path: build/${{ matrix.target }}
@@ -57,7 +57,7 @@ jobs:
     if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - name: Checkout git repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           submodules: true
 
@@ -67,11 +67,11 @@ jobs:
           tag="autobuild-$(date -u '+%Y-%m-%d-%H-%M')"
           git tag $tag
           git push origin $tag
-          echo "::set-output name=TAG::$tag"
-          echo "::set-output name=COMMIT::$(git --git-dir swiftshader/.git rev-parse HEAD)"
+          echo "TAG=$tag" >> $GITHUB_OUTPUT
+          echo "COMMIT=$(git --git-dir swiftshader/.git rev-parse HEAD)" >> $GITHUB_OUTPUT
 
       - name: Download artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
 
       - name: Prepare artifacts
         run: |
