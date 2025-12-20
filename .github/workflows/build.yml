@@ -19,16 +19,19 @@ jobs:
             os: ubuntu-latest
             artifact: linux64
             build_script: build.sh
+            cmake_args: ""
 
           - target: Windows
             os: windows-latest
             artifact: win64
             build_script: build.ps1
+            cmake_args: ""
 
           - target: MacOS
             os: macos-latest
             artifact: macos64
             build_script: build.sh
+            cmake_args: "-DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_POLICY_VERSION_MINIMUM=3.5"
 
     steps:
       - name: Checkout git repo
@@ -48,7 +51,7 @@ jobs:
           brew install ninja
 
       - name: Build swiftshader
-        run: ./${{ matrix.build_script }}
+        run: ./${{ matrix.build_script }} ${{ matrix.cmake_args }}
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
