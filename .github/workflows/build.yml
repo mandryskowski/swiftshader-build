@@ -13,6 +13,7 @@ jobs:
         target:
           - Linux
           - Windows
+          - MacOS
         include:
           - target: Linux
             os: ubuntu-latest
@@ -23,6 +24,11 @@ jobs:
             os: windows-latest
             artifact: win64
             build_script: build.ps1
+
+          - target: MacOS
+            os: macos-latest
+            artifact: macos64
+            build_script: build.sh
 
     steps:
       - name: Checkout git repo
@@ -69,7 +75,7 @@ jobs:
 
       - name: Prepare artifacts
         run: |
-          for target in linux64 win64; do
+          for target in linux64 win64 macos64; do
             echo "${{ steps.create-git-tag.outputs.COMMIT }}" > swiftshader-$target/COMMIT
             tar -czf swiftshader-$target.tar.gz swiftshader-$target/*
           done
