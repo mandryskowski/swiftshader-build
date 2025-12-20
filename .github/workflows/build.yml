@@ -13,7 +13,7 @@ jobs:
         target:
           - Linux
           - Windows
-          - MacOS
+          - Darwin
         include:
           - target: Linux
             os: ubuntu-latest
@@ -27,7 +27,7 @@ jobs:
             build_script: build.ps1
             cmake_args: ""
 
-          - target: MacOS
+          - target: Darwin
             os: macos-latest
             artifact: macos64
             build_script: build.sh
@@ -46,7 +46,7 @@ jobs:
           sudo apt-get install ninja-build
 
       - name: Install dependencies (MacOS)
-        if: matrix.target == 'MacOS'
+        if: matrix.target == 'Darwin'
         run: |
           brew install ninja
 
