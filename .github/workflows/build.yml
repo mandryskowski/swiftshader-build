@@ -12,8 +12,6 @@ jobs:
       matrix:
         target:
           - Linux
-          - Windows
-          - Darwin
         asan:
           - false
           - true
@@ -31,33 +29,6 @@ jobs:
             artifact: linux64-asan
             # Force Clang, enable ASan
             cmake_args: "-DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_FLAGS=-fsanitize=address -DCMAKE_CXX_FLAGS=-fsanitize=address -DCMAKE_SHARED_LINKER_FLAGS=-fsanitize=address -DSWIFTSHADER_BUILD_TESTS=OFF"
-
-          # --- Windows Builds ---
-          - target: Windows
-            asan: false
-            os: windows-latest
-            artifact: win64
-            cmake_args: "-Thost=x64 -DSWIFTSHADER_BUILD_TESTS=OFF"
-
-          - target: Windows
-            asan: true
-            os: windows-latest
-            artifact: win64-asan
-            # Force ClangCL, preserve x64 host, enable ASan
-            cmake_args: "-T ClangCL,host=x64 -DCMAKE_C_FLAGS=-fsanitize=address -DCMAKE_CXX_FLAGS=-fsanitize=address -DCMAKE_SHARED_LINKER_FLAGS=-fsanitize=address -DSWIFTSHADER_BUILD_TESTS=OFF"
-
-          # --- MacOS (Darwin) Builds ---
-          - target: Darwin
-            asan: false
-            os: macos-latest
-            artifact: macos64
-            cmake_args: "-DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DSPIRV_WERROR=OFF -DSWIFTSHADER_WARNINGS_AS_ERRORS=OFF -DSWIFTSHADER_BUILD_TESTS=OFF"
-
-          - target: Darwin
-            asan: true
-            os: macos-latest
-            artifact: macos64-asan
-            cmake_args: "-DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DSPIRV_WERROR=OFF -DSWIFTSHADER_WARNINGS_AS_ERRORS=OFF -DCMAKE_C_FLAGS=-fsanitize=address -DCMAKE_CXX_FLAGS=-fsanitize=address -DCMAKE_SHARED_LINKER_FLAGS=-fsanitize=address -DSWIFTSHADER_BUILD_TESTS=OFF"
 
     steps:
       - name: Checkout git repo
