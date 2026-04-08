@@ -24,15 +24,15 @@ jobs:
             os: ubuntu-latest
             artifact: linux64
             build_script: build.sh
-            cmake_args: ""
+            cmake_args: "-DSWIFTSHADER_BUILD_TESTS=OFF -DSPIRV_SKIP_EXECUTABLES=ON"
 
           - target: Linux
             asan: true
             os: ubuntu-latest
             artifact: linux64-asan
             build_script: build.sh
-            # Force Clang on Linux to match Rust's LLVM ASan runtime
-            cmake_args: "-DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_FLAGS=-fsanitize=address -DCMAKE_CXX_FLAGS=-fsanitize=address -DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address -DCMAKE_SHARED_LINKER_FLAGS=-fsanitize=address"
+            # Force Clang, enable ASan, and disable test binaries that drop ASan linker flags
+            cmake_args: "-DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_FLAGS=-fsanitize=address -DCMAKE_CXX_FLAGS=-fsanitize=address -DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address -DCMAKE_SHARED_LINKER_FLAGS=-fsanitize=address -DSWIFTSHADER_BUILD_TESTS=OFF -DSPIRV_SKIP_EXECUTABLES=ON"
 
           # --- Windows Builds ---
           - target: Windows
@@ -40,15 +40,15 @@ jobs:
             os: windows-latest
             artifact: win64
             build_script: build.ps1
-            cmake_args: ""
+            cmake_args: "-DSWIFTSHADER_BUILD_TESTS=OFF -DSPIRV_SKIP_EXECUTABLES=ON"
 
           - target: Windows
             asan: true
             os: windows-latest
             artifact: win64-asan
             build_script: build.ps1
-            # Force ClangCL on Windows to match Rust's LLVM ASan runtime (uses clang_rt.asan_dynamic)
-            cmake_args: "-T ClangCL -DCMAKE_C_FLAGS=-fsanitize=address -DCMAKE_CXX_FLAGS=-fsanitize=address -DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address -DCMAKE_SHARED_LINKER_FLAGS=-fsanitize=address"
+            # Force ClangCL, enable ASan, and disable test binaries
+            cmake_args: "-T ClangCL -DCMAKE_C_FLAGS=-fsanitize=address -DCMAKE_CXX_FLAGS=-fsanitize=address -DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address -DCMAKE_SHARED_LINKER_FLAGS=-fsanitize=address -DSWIFTSHADER_BUILD_TESTS=OFF -DSPIRV_SKIP_EXECUTABLES=ON"
 
           # --- MacOS (Darwin) Builds ---
           - target: Darwin
@@ -56,15 +56,15 @@ jobs:
             os: macos-latest
             artifact: macos64
             build_script: build.sh
-            cmake_args: "-DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DSPIRV_WERROR=OFF -DSWIFTSHADER_WARNINGS_AS_ERRORS=OFF"
+            cmake_args: "-DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DSPIRV_WERROR=OFF -DSWIFTSHADER_WARNINGS_AS_ERRORS=OFF -DSWIFTSHADER_BUILD_TESTS=OFF -DSPIRV_SKIP_EXECUTABLES=ON"
 
           - target: Darwin
             asan: true
             os: macos-latest
             artifact: macos64-asan
             build_script: build.sh
-            # MacOS defaults to Apple Clang which is inherently compatible
-            cmake_args: "-DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DSPIRV_WERROR=OFF -DSWIFTSHADER_WARNINGS_AS_ERRORS=OFF -DCMAKE_C_FLAGS=-fsanitize=address -DCMAKE_CXX_FLAGS=-fsanitize=address -DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address -DCMAKE_SHARED_LINKER_FLAGS=-fsanitize=address"
+            # Mac ASan and disable test binaries
+            cmake_args: "-DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DSPIRV_WERROR=OFF -DSWIFTSHADER_WARNINGS_AS_ERRORS=OFF -DCMAKE_C_FLAGS=-fsanitize=address -DCMAKE_CXX_FLAGS=-fsanitize=address -DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address -DCMAKE_SHARED_LINKER_FLAGS=-fsanitize=address -DSWIFTSHADER_BUILD_TESTS=OFF -DSPIRV_SKIP_EXECUTABLES=ON"
 
     steps:
       - name: Checkout git repo
