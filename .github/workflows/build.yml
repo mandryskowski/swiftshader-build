@@ -31,7 +31,8 @@ jobs:
             os: ubuntu-latest
             artifact: linux64-asan
             build_script: build.sh
-            cmake_args: "-DCMAKE_C_FLAGS=-fsanitize=address -DCMAKE_CXX_FLAGS=-fsanitize=address -DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address -DCMAKE_SHARED_LINKER_FLAGS=-fsanitize=address"
+            # Force Clang on Linux to match Rust's LLVM ASan runtime
+            cmake_args: "-DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_FLAGS=-fsanitize=address -DCMAKE_CXX_FLAGS=-fsanitize=address -DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address -DCMAKE_SHARED_LINKER_FLAGS=-fsanitize=address"
 
           # --- Windows Builds ---
           - target: Windows
@@ -46,7 +47,8 @@ jobs:
             os: windows-latest
             artifact: win64-asan
             build_script: build.ps1
-            cmake_args: "-DCMAKE_C_FLAGS=/fsanitize=address -DCMAKE_CXX_FLAGS=/fsanitize=address"
+            # Force ClangCL on Windows to match Rust's LLVM ASan runtime (uses clang_rt.asan_dynamic)
+            cmake_args: "-T ClangCL -DCMAKE_C_FLAGS=-fsanitize=address -DCMAKE_CXX_FLAGS=-fsanitize=address -DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address -DCMAKE_SHARED_LINKER_FLAGS=-fsanitize=address"
 
           # --- MacOS (Darwin) Builds ---
           - target: Darwin
@@ -61,6 +63,7 @@ jobs:
             os: macos-latest
             artifact: macos64-asan
             build_script: build.sh
+            # MacOS defaults to Apple Clang which is inherently compatible
             cmake_args: "-DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DSPIRV_WERROR=OFF -DSWIFTSHADER_WARNINGS_AS_ERRORS=OFF -DCMAKE_C_FLAGS=-fsanitize=address -DCMAKE_CXX_FLAGS=-fsanitize=address -DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address -DCMAKE_SHARED_LINKER_FLAGS=-fsanitize=address"
 
     steps:
@@ -69,11 +72,11 @@ jobs:
         with:
           submodules: true
 
-      - name: Install dependencies
+      - name: Install dependencies (Linux)
         if: matrix.target == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install ninja-build
+          sudo apt-get install -y ninja-build clang
 
       - name: Install dependencies (MacOS)
         if: matrix.target == 'Darwin'
@@ -115,9 +118,8 @@ jobs:
 
       - name: Prepare artifacts
         run: |
-          # Dynamically package all artifact directories avoiding the need to hard-code targets
+          # Dynamically package all artifact directories
           for dir in swiftshader-*/; do
-            # Strip the trailing slash
             dir="${dir%/}"
             echo "${{ steps.create-git-tag.outputs.COMMIT }}" > "$dir/COMMIT"
             tar -czf "$dir.tar.gz" "$dir"
