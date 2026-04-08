@@ -37,14 +37,14 @@ jobs:
             asan: false
             os: windows-latest
             artifact: win64
-            cmake_args: "-DSWIFTSHADER_BUILD_TESTS=OFF"
+            cmake_args: "-Thost=x64 -DSWIFTSHADER_BUILD_TESTS=OFF"
 
           - target: Windows
             asan: true
             os: windows-latest
             artifact: win64-asan
-            # Force ClangCL, enable ASan
-            cmake_args: "-T ClangCL -DCMAKE_C_FLAGS=-fsanitize=address -DCMAKE_CXX_FLAGS=-fsanitize=address -DCMAKE_SHARED_LINKER_FLAGS=-fsanitize=address -DSWIFTSHADER_BUILD_TESTS=OFF"
+            # Force ClangCL, preserve x64 host, enable ASan
+            cmake_args: "-T ClangCL,host=x64 -DCMAKE_C_FLAGS=-fsanitize=address -DCMAKE_CXX_FLAGS=-fsanitize=address -DCMAKE_SHARED_LINKER_FLAGS=-fsanitize=address -DSWIFTSHADER_BUILD_TESTS=OFF"
 
           # --- MacOS (Darwin) Builds ---
           - target: Darwin
@@ -79,19 +79,21 @@ jobs:
       - name: Build swiftshader (Unix)
         if: matrix.target != 'Windows'
         run: |
-          mkdir build && cd build
-          cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release ${{ matrix.cmake_args }}
-          # Exclusively build the vulkan driver library
+          mkdir -p build
+          cd build
+          cmake -GNinja -DCMAKE_BUILD_TYPE=Release ${{ matrix.cmake_args }} ../swiftshader
+          # ONLY build the driver! This avoids all failing testing submodules.
           cmake --build . --target vk_swiftshader
 
       - name: Build swiftshader (Windows)
         if: matrix.target == 'Windows'
         run: |
-          mkdir build
-          cd build
-          cmake .. -DCMAKE_BUILD_TYPE=Release ${{ matrix.cmake_args }}
-          # Exclusively build the vulkan driver library
+          New-Item -ItemType Directory -ErrorAction SilentlyContinue build
+          Push-Location build
+          cmake ../swiftshader ${{ matrix.cmake_args }}
+          # ONLY build the driver!
           cmake --build . --config Release --target vk_swiftshader
+          Pop-Location
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
