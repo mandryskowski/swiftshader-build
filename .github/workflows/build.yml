@@ -14,24 +14,54 @@ jobs:
           - Linux
           - Windows
           - Darwin
+        asan:
+          - false
+          - true
         include:
+          # --- Linux Builds ---
           - target: Linux
+            asan: false
             os: ubuntu-latest
             artifact: linux64
             build_script: build.sh
             cmake_args: ""
 
+          - target: Linux
+            asan: true
+            os: ubuntu-latest
+            artifact: linux64-asan
+            build_script: build.sh
+            cmake_args: "-DCMAKE_C_FLAGS=-fsanitize=address -DCMAKE_CXX_FLAGS=-fsanitize=address -DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address -DCMAKE_SHARED_LINKER_FLAGS=-fsanitize=address"
+
+          # --- Windows Builds ---
           - target: Windows
+            asan: false
             os: windows-latest
             artifact: win64
             build_script: build.ps1
             cmake_args: ""
 
+          - target: Windows
+            asan: true
+            os: windows-latest
+            artifact: win64-asan
+            build_script: build.ps1
+            cmake_args: "-DCMAKE_C_FLAGS=/fsanitize=address -DCMAKE_CXX_FLAGS=/fsanitize=address"
+
+          # --- MacOS (Darwin) Builds ---
           - target: Darwin
+            asan: false
             os: macos-latest
             artifact: macos64
             build_script: build.sh
             cmake_args: "-DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DSPIRV_WERROR=OFF -DSWIFTSHADER_WARNINGS_AS_ERRORS=OFF"
+
+          - target: Darwin
+            asan: true
+            os: macos-latest
+            artifact: macos64-asan
+            build_script: build.sh
+            cmake_args: "-DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DSPIRV_WERROR=OFF -DSWIFTSHADER_WARNINGS_AS_ERRORS=OFF -DCMAKE_C_FLAGS=-fsanitize=address -DCMAKE_CXX_FLAGS=-fsanitize=address -DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address -DCMAKE_SHARED_LINKER_FLAGS=-fsanitize=address"
 
     steps:
       - name: Checkout git repo
@@ -85,9 +115,12 @@ jobs:
 
       - name: Prepare artifacts
         run: |
-          for target in linux64 win64 macos64; do
-            echo "${{ steps.create-git-tag.outputs.COMMIT }}" > swiftshader-$target/COMMIT
-            tar -czf swiftshader-$target.tar.gz swiftshader-$target/*
+          # Dynamically package all artifact directories avoiding the need to hard-code targets
+          for dir in swiftshader-*/; do
+            # Strip the trailing slash
+            dir="${dir%/}"
+            echo "${{ steps.create-git-tag.outputs.COMMIT }}" > "$dir/COMMIT"
+            tar -czf "$dir.tar.gz" "$dir"
           done
 
       - name: Create release
