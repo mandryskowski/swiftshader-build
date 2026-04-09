@@ -34,9 +34,8 @@ jobs:
             cxx: clang++
             cflags: "-fsanitize=address"
             # -fuse-ld=lld is more robust for ASan
-            # -Wl,--allow-shlib-undefined mimics meson's b_lundef=false for shared libs
             # -Wl,--undefined-version prevents lld from failing on SwiftShader's generic linker script
-            ldflags: "-fsanitize=address -fuse-ld=lld -Wl,--allow-shlib-undefined -Wl,--undefined-version"
+            ldflags: "-fsanitize=address -fuse-ld=lld -Wl,--undefined-version"
 
     steps:
       - name: Checkout git repo
@@ -67,6 +66,13 @@ jobs:
           mkdir -p build
           cd build
           cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DSWIFTSHADER_BUILD_TESTS=OFF ../swiftshader
+          
+          # SwiftShader's CMake hardcodes -Wl,--no-undefined, which breaks ASan shared libs.
+          # We remove it from the generated ninja file using perl (cross-platform safe).
+          if [ "${{ matrix.asan }}" = "true" ]; then
+            perl -pi -e 's/-Wl,--no-undefined//g' build.ninja
+          fi
+          
           # ONLY build the driver! This avoids all failing testing submodules.
           cmake --build . --target vk_swiftshader
 
