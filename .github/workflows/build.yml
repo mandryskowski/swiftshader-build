@@ -100,7 +100,8 @@ jobs:
         run: |
           mkdir -p build
           cd build
-          cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DSWIFTSHADER_BUILD_TESTS=OFF ../swiftshader
+          # Pass -DCMAKE_POLICY_VERSION_MINIMUM=3.5 to bypass CMake 3.30+ deprecation errors
+          cmake -GNinja -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DCMAKE_BUILD_TYPE=Release -DSWIFTSHADER_BUILD_TESTS=OFF ../swiftshader
           
           # SwiftShader's CMake hardcodes -Wl,--no-undefined, which breaks ASan shared libs.
           # We remove it from the generated ninja file using perl (cross-platform safe).
@@ -116,7 +117,8 @@ jobs:
         run: |
           New-Item -ItemType Directory -ErrorAction SilentlyContinue build
           Push-Location build
-          cmake ../swiftshader -DSWIFTSHADER_BUILD_TESTS=OFF
+          # Pass -DCMAKE_POLICY_VERSION_MINIMUM=3.5 to bypass CMake 3.30+ deprecation errors
+          cmake ../swiftshader -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DSWIFTSHADER_BUILD_TESTS=OFF
           # ONLY build the driver!
           cmake --build . --config Release --target vk_swiftshader
           Pop-Location
