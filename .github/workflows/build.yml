@@ -15,20 +15,31 @@ jobs:
         asan:
           - false
           - true
+        exclude:
+          # Exclude ASan on Windows for now to simplify compiler flag logic
+          - target: Windows
+            asan: true
         include:
           # --- Linux Builds ---
           - target: Linux
             asan: false
-            os: ubuntu-latest
+            os: ubuntu-24.04
             artifact: linux64
-            cmake_args: "-DSWIFTSHADER_BUILD_TESTS=OFF"
+            cc: gcc
+            cxx: g++
+            cflags: ""
+            ldflags: ""
 
           - target: Linux
             asan: true
-            os: ubuntu-latest
+            os: ubuntu-24.04
             artifact: linux64-asan
-            # Force Clang, enable ASan for compile and ALL link steps (EXE, SHARED, MODULE)
-            cmake_args: "-DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_FLAGS=-fsanitize=address -DCMAKE_CXX_FLAGS=-fsanitize=address -DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address -DCMAKE_MODULE_LINKER_FLAGS=-fsanitize=address -DCMAKE_SHARED_LINKER_FLAGS=-fsanitize=address -DSWIFTSHADER_BUILD_TESTS=OFF"
+            cc: clang
+            cxx: clang++
+            cflags: "-fsanitize=address"
+            # -fuse-ld=lld is more robust for ASan
+            # -Wl,--allow-shlib-undefined mimics meson's b_lundef=false for shared libs
+            ldflags: "-fsanitize=address -fuse-ld=lld -Wl,--allow-shlib-undefined"
 
     steps:
       - name: Checkout git repo
@@ -40,7 +51,7 @@ jobs:
         if: matrix.target == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y ninja-build clang
+          sudo apt-get install -y ninja-build clang lld
 
       - name: Install dependencies (MacOS)
         if: matrix.target == 'Darwin'
@@ -49,10 +60,16 @@ jobs:
 
       - name: Build swiftshader (Unix)
         if: matrix.target != 'Windows'
+        env:
+          CC: ${{ matrix.cc }}
+          CXX: ${{ matrix.cxx }}
+          CFLAGS: ${{ matrix.cflags }}
+          CXXFLAGS: ${{ matrix.cflags }}
+          LDFLAGS: ${{ matrix.ldflags }}
         run: |
           mkdir -p build
           cd build
-          cmake -GNinja -DCMAKE_BUILD_TYPE=Release ${{ matrix.cmake_args }} ../swiftshader
+          cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DSWIFTSHADER_BUILD_TESTS=OFF ../swiftshader
           # ONLY build the driver! This avoids all failing testing submodules.
           cmake --build . --target vk_swiftshader
 
@@ -61,7 +78,7 @@ jobs:
         run: |
           New-Item -ItemType Directory -ErrorAction SilentlyContinue build
           Push-Location build
-          cmake ../swiftshader ${{ matrix.cmake_args }}
+          cmake ../swiftshader -DSWIFTSHADER_BUILD_TESTS=OFF
           # ONLY build the driver!
           cmake --build . --config Release --target vk_swiftshader
           Pop-Location
