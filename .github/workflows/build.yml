@@ -15,10 +15,6 @@ jobs:
         asan:
           - false
           - true
-        exclude:
-          # Exclude ASan on Windows for now to simplify compiler flag logic
-          - target: Windows
-            asan: true
         include:
           # --- Linux Builds ---
           - target: Linux
@@ -39,7 +35,8 @@ jobs:
             cflags: "-fsanitize=address"
             # -fuse-ld=lld is more robust for ASan
             # -Wl,--allow-shlib-undefined mimics meson's b_lundef=false for shared libs
-            ldflags: "-fsanitize=address -fuse-ld=lld -Wl,--allow-shlib-undefined"
+            # -Wl,--undefined-version prevents lld from failing on SwiftShader's generic linker script
+            ldflags: "-fsanitize=address -fuse-ld=lld -Wl,--allow-shlib-undefined -Wl,--undefined-version"
 
     steps:
       - name: Checkout git repo
