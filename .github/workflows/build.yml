@@ -12,9 +12,15 @@ jobs:
       matrix:
         target:
           - Linux
+          - Windows
+          - Darwin
         asan:
           - false
           - true
+        exclude:
+          # Exclude ASan on Windows for now to simplify compiler flag logic
+          - target: Windows
+            asan: true
         include:
           # --- Linux Builds ---
           - target: Linux
@@ -36,6 +42,35 @@ jobs:
             # -fuse-ld=lld is more robust for ASan
             # -Wl,--undefined-version prevents lld from failing on SwiftShader's generic linker script
             ldflags: "-fsanitize=address -fuse-ld=lld -Wl,--undefined-version"
+
+          # --- MacOS Builds ---
+          - target: Darwin
+            asan: false
+            os: macos-latest
+            artifact: macos64
+            cc: clang
+            cxx: clang++
+            cflags: ""
+            ldflags: ""
+
+          - target: Darwin
+            asan: true
+            os: macos-latest
+            artifact: macos64-asan
+            cc: clang
+            cxx: clang++
+            cflags: "-fsanitize=address"
+            ldflags: "-fsanitize=address"
+
+          # --- Windows Builds ---
+          - target: Windows
+            asan: false
+            os: windows-latest
+            artifact: win64
+            cc: cl
+            cxx: cl
+            cflags: ""
+            ldflags: ""
 
     steps:
       - name: Checkout git repo
