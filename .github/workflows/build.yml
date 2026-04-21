@@ -14,24 +14,35 @@ jobs:
           - Linux
           - Windows
           - Darwin
+          - Linux-ASan-Coverage
         include:
           - target: Linux
             os: ubuntu-latest
             artifact: linux64
+            out_dir: Linux
             build_script: build.sh
             cmake_args: ""
 
           - target: Windows
             os: windows-latest
             artifact: win64
+            out_dir: Windows
             build_script: build.ps1
             cmake_args: ""
 
           - target: Darwin
             os: macos-latest
             artifact: macos64
+            out_dir: Darwin
             build_script: build.sh
             cmake_args: "-DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DSPIRV_WERROR=OFF -DSWIFTSHADER_WARNINGS_AS_ERRORS=OFF"
+
+          - target: Linux-ASan-Coverage
+            os: ubuntu-latest
+            artifact: linux64-asan-coverage
+            out_dir: Linux
+            build_script: build.sh
+            cmake_args: '-DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DSWIFTSHADER_ASAN=ON -DSWIFTSHADER_WARNINGS_AS_ERRORS=OFF -DCMAKE_C_FLAGS="-fprofile-instr-generate -fcoverage-mapping" -DCMAKE_CXX_FLAGS="-fprofile-instr-generate -fcoverage-mapping" -DCMAKE_EXE_LINKER_FLAGS="-fprofile-instr-generate -fcoverage-mapping" -DCMAKE_SHARED_LINKER_FLAGS="-fprofile-instr-generate -fcoverage-mapping"'
 
     steps:
       - name: Checkout git repo
@@ -40,7 +51,7 @@ jobs:
           submodules: true
 
       - name: Install dependencies
-        if: matrix.target == 'Linux'
+        if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
           sudo apt-get install ninja-build
@@ -57,7 +68,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: swiftshader-${{ matrix.artifact }}
-          path: build/${{ matrix.target }}
+          path: build/${{ matrix.out_dir }}
 
   release:
     runs-on: ubuntu-latest
@@ -85,7 +96,7 @@ jobs:
 
       - name: Prepare artifacts
         run: |
-          for target in linux64 win64 macos64; do
+          for target in linux64 win64 macos64 linux64-asan-coverage; do
             echo "${{ steps.create-git-tag.outputs.COMMIT }}" > swiftshader-$target/COMMIT
             tar -czf swiftshader-$target.tar.gz swiftshader-$target/*
           done
