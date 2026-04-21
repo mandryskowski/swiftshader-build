@@ -42,7 +42,7 @@ jobs:
             artifact: linux64-asan-coverage
             out_dir: Linux
             build_script: build.sh
-            cmake_args: '-DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DSWIFTSHADER_ASAN=ON -DSWIFTSHADER_WARNINGS_AS_ERRORS=OFF -DCMAKE_C_FLAGS="-fprofile-instr-generate -fcoverage-mapping" -DCMAKE_CXX_FLAGS="-fprofile-instr-generate -fcoverage-mapping" -DCMAKE_EXE_LINKER_FLAGS="-fprofile-instr-generate -fcoverage-mapping" -DCMAKE_SHARED_LINKER_FLAGS="-fprofile-instr-generate -fcoverage-mapping"'
+            cmake_args: '-DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DSWIFTSHADER_ASAN=ON -DSWIFTSHADER_WARNINGS_AS_ERRORS=OFF -DCMAKE_C_FLAGS="-fprofile-instr-generate -fcoverage-mapping -ffile-prefix-map=/home/runner/work/swiftshader-build/swiftshader-build=." -DCMAKE_CXX_FLAGS="-fprofile-instr-generate -fcoverage-mapping -ffile-prefix-map=/home/runner/work/swiftshader-build/swiftshader-build=." -DCMAKE_EXE_LINKER_FLAGS="-fprofile-instr-generate -fcoverage-mapping" -DCMAKE_SHARED_LINKER_FLAGS="-fprofile-instr-generate -fcoverage-mapping"'
 
     steps:
       - name: Checkout git repo
