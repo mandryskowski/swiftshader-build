@@ -5,4 +5,10 @@ mkdir -p build
 cd build
 
 cmake -GNinja -DCMAKE_BUILD_TYPE=Release "$@" ../swiftshader
-cmake --build .
+
+# Limit parallel jobs for ASAN builds to prevent out-of-memory errors
+if [[ "$*" == *SWIFTSHADER_ASAN=ON* ]]; then
+  cmake --build . -j 2
+else
+  cmake --build .
+fi
